@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Akeneo\Platform;
 
 use \PDO;
-use Symfony\Component\Intl\Intl;
+use RuntimeException;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -20,26 +20,14 @@ use Symfony\Component\Yaml\Yaml;
  */
 class CommunityRequirements
 {
-    const REQUIRED_PHP_VERSION = '7.2.0';
-    const REQUIRED_GD_VERSION = '2.0';
-    const REQUIRED_CURL_VERSION = '7.0';
-    const REQUIRED_ICU_VERSION = '4.2';
     const LOWEST_REQUIRED_MYSQL_VERSION = '5.7.22';
     const GREATEST_REQUIRED_MYSQL_VERSION = '5.8.0';
 
-    const REQUIRED_EXTENSIONS = [
-        'apcu',
-        'bcmath',
-        'curl',
-        'fileinfo',
-        'gd',
-        'intl',
-        'pdo_mysql',
-        'xml',
-        'zip',
-        'exif',
-        'imagick'
-    ];
+    /** @var string[] */
+    private $directoriesToCheck;
+
+    /** @var string */
+    private $baseDir;
 
     public function __construct(string $baseDir, array $directoriesToCheck = [])
     {
@@ -53,47 +41,7 @@ class CommunityRequirements
      */
     public function getRequirements(): array
     {
-        $phpVersion  = phpversion();
-        $gdVersion   = defined('GD_VERSION') ? GD_VERSION : null;
-        $curlVersion = function_exists('curl_version') ? curl_version() : null;
-        $icuVersion  = Intl::getIcuVersion();
-
         $requirements = [];
-
-        $requirements[] = new Requirement(
-            version_compare($phpVersion, self::REQUIRED_PHP_VERSION, '>='),
-            sprintf('PHP version must be at least %s (%s installed)', self::REQUIRED_PHP_VERSION, $phpVersion),
-            sprintf('You are running PHP version "<strong>%s</strong>", but needs at least PHP "<strong>%s</strong>" to run.
-                Before using, upgrade your PHP installation, preferably to the latest version.',
-                $phpVersion, self::REQUIRED_PHP_VERSION)
-        );
-
-        foreach (self::REQUIRED_EXTENSIONS as $requiredExtension) {
-            $requirements[] = new Requirement(
-                extension_loaded($requiredExtension),
-                sprintf('%s extension should be available', $requiredExtension),
-                sprintf('Install and enable the <strong>%s</strong> extension.', $requiredExtension)
-            );
-        }
-
-        $requirements[] = new Requirement(
-            null !== $gdVersion && version_compare($gdVersion, self::REQUIRED_GD_VERSION, '>='),
-            'GD extension must be at least ' . self::REQUIRED_GD_VERSION,
-            'Install and enable the <strong>GD</strong> extension at least ' . self::REQUIRED_GD_VERSION . ' version'
-        );
-
-        $requirements[] = new Requirement(
-            null !== $icuVersion && version_compare($icuVersion, self::REQUIRED_ICU_VERSION, '>='),
-            'icu library must be at least ' . self::REQUIRED_ICU_VERSION,
-            'Install and enable the <strong>icu</strong> library at least ' . self::REQUIRED_ICU_VERSION . ' version'
-        );
-
-        $requirements[] = new Requirement(
-            null !== $curlVersion && version_compare($curlVersion['version'], self::REQUIRED_CURL_VERSION, '>='),
-            'cURL extension must be at least ' . self::REQUIRED_CURL_VERSION,
-            'Install and enable the <strong>cURL</strong> extension at least ' . self::REQUIRED_CURL_VERSION . ' version',
-            false
-        );
 
         $mem = $this->getBytes(ini_get('memory_limit'));
         $requirements[] = new Requirement(
