@@ -6,6 +6,7 @@
 
 - PIM-8412: Fix wrong display of too long attribute group labels when filtering in the datagrid
 - PIM-8424: Fix memory leak executing "akeneo:batch:purge-job-execution" command
+- PIM-8383: Do not take in account product without family when filtering IS_EMPTY
 
 # 3.0.22 (2019-06-04)
 
